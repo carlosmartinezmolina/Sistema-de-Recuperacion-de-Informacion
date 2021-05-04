@@ -1,0 +1,3 @@
+pedro    gato    leon
+leon leon
+gato gato leon
