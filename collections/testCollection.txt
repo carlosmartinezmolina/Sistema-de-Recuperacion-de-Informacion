@@ -1,3 +1,6 @@
+.I 1
 pedro    gato    leon
+.I 2
 leon leon
+.I 3
 gato gato leon
