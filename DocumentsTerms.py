@@ -1,5 +1,8 @@
 import math
 
+def truncate(number,n):
+    return float(int(number * (10**n)) / (10**n))
+
 def turnLineToWords(line):
     wordList = {}
     word = ''
@@ -27,6 +30,14 @@ def sumDict(d1,d2):
             d1[k] += d2[k]
     return d1
 
+def sumDictTerms(d1,d2):
+    for k in d2:
+        if d1.get(k) == None:
+            d1[k] = 1
+        else:
+            d1[k] += 1
+    return d1
+
 def documentId(d):
     if len(d) == 2 and d.get('.I') != None:
         return False
@@ -47,7 +58,7 @@ def readDocument(url):
             documentWordList = sumDict(documentWordList,temp)
         elif temp.get('.I') != None and int(list(temp)[1]) > 1:
             documentList.append((int(list(temp)[1]) - 1,documentWordList))
-            documentsWords = sumDict(documentsWords,documentWordList)
+            documentsWords = sumDictTerms(documentsWords,documentWordList)
             documentWordList = {}
             #Estas lineas comentadas limitan la cantidad de documentos analizados
             #if int(list(temp)[1]) > 2:
@@ -57,58 +68,95 @@ def readDocument(url):
         documentsWords = sumDict(documentsWords,documentWordList)
     return documentsWords , documentList
 
-def weightVector_tf(document,wordList):
+def weightVector_tf(document):
     weightVector = {}
     max_freq = -1
     value = 0
-    for item in wordList:
-        if document.get(item) != None:
-            weightVector[item] = document[item]
-            if document[item] > max_freq:
-                max_freq = document[item]
-        else:
-            weightVector[item] = 0
+    for item in document:
+        if document[item] > max_freq:
+            max_freq = document[item]
+        weightVector[item] = document[item]
     for item in weightVector:
-        weightVector[item] = weightVector[item]/max_freq
+        weightVector[item] = truncate(weightVector[item]/max_freq,5)
     return weightVector
 
 def matrix_tf(documentList,documentsWords):
     matrix = []
     for item in documentList:
-        row = weightVector_tf(item[1],documentsWords)
-        matrix.append(list(row.items()))
+        row = weightVector_tf(item[1])
+        matrix.append(row)
     return matrix
-
-def amount_doc_appear_term_i(documentList,termino):
-    result = 0
-    for item in documentList:
-        if item[1].get(termino):
-            result += 1
-    return result
 
 def weightVector_idf(documentList,documentsWords):
     weightVector = {}
     amountDocCollection = len(documentList)
     for item in documentsWords:
-        weightVector[item] = math.log10(amountDocCollection/amount_doc_appear_term_i(documentList,item))
+        weightVector[item] = truncate(math.log10(amountDocCollection/documentsWords[item]),5)
     return weightVector
 
-def matrix_w_ij(documentList,documentsWords):
+def documentWeight(url):
     matrix_w = []
+    documentsWords ,documentList = readDocument(url)
     tf = matrix_tf(documentList,documentsWords)
     idf = weightVector_idf(documentList, documentsWords)
     for i in range(len(tf)):
         matrix_w.append([])
-        for j in range(len(idf)):
-            term = tf[i][j][0]
-            matrix_w[i].append((term,tf[i][j][1]*idf[term]))
+        for j in idf:
+            if tf[i].get(j) == None:
+                matrix_w[i].append((j,0))
+            else:
+                term = tf[i][j]
+                matrix_w[i].append((j,truncate(term*idf[j],2)))
     return matrix_w
 
+def printMatrix(matrix):
+    for i in matrix:
+        for j in i:
+            print("\t",j[0],end=" ")
+        break
+    print()
+    c = 1
+    for item in matrix:
+        print('d' + str(c),end="")
+        for element in item:
+            print("\t",element[1],end=" ")
+        print()
+        c += 1
+
+def queryWeight(url,a=0.5):
+    matrix_w = []
+    querysWords ,queryList = readDocument(url)
+    tf = matrix_tf(queryList,querysWords)
+    idf = weightVector_idf(queryList, querysWords)
+    for i in range(len(tf)):
+        matrix_w.append([])
+        for j in idf:
+            if tf[i].get(j) == None:
+                matrix_w[i].append((j,0))
+            else:
+                term = tf[i][j]
+                matrix_w[i].append((j,truncate(term*idf[j],2)))
+    return matrix_w
+
+def similitud(vectorQuery,vectorDocument):
+    numerador = 0
+    normaQuery = 0
+    normaDocument = 0
+    for i in range(len(vectorQuery)):
+        numerador += vectorQuery[i][1] * vectorDocument[i][1]
+        normaQuery += vectorQuery[i][1]**2
+        normaDocument += vectorDocument[i][1]**2
+    return numerador/math.sqrt(normaQuery) * math.sqrt(normaDocument)
+
 def main():
-    url = 'collections/cran.txt'
-    documentsWords ,documentList = readDocument(url)
-    r = matrix_w_ij(documentList,documentsWords)
-    print(r)
+    urlQuery = 'collections/cran.qry'
+    urlDocument = 'collections/cran.txt'
+
+    dw = documentWeight(urlDocument)
+    qw = queryWeight(urlQuery)
+    
+    #r = similitud(dw[0],qw[0])
+    #print(r)
 
 if __name__ == '__main__':
     main()
