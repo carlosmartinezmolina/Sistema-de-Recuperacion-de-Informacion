@@ -1,6 +1,10 @@
 .I 1
-pedro    gato    leon
+leon leon leon
 .I 2
-leon leon
+leon leon leon zorro
 .I 3
-gato gato leon
+leon zorro nutria
+.I 4
+leon leon leon zorro zorro zorro
+.I 5
+nutria
