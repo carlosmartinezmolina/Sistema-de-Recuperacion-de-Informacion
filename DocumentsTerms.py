@@ -100,13 +100,12 @@ def documentWeight(url):
     tf = matrix_tf(documentList,documentsWords)
     idf = weightVector_idf(documentList, documentsWords)
     for i in range(len(tf)):
-        matrix_w.append([])
+        temp = {}
         for j in idf:
-            if tf[i].get(j) == None:
-                matrix_w[i].append((j,0))
-            else:
+            if tf[i].get(j) != None:
                 term = tf[i][j]
-                matrix_w[i].append((j,truncate(term*idf[j],2)))
+                temp[j] = truncate(term*idf[j],2)
+                matrix_w.append(temp)
     return matrix_w
 
 def printMatrix(matrix):
@@ -129,24 +128,25 @@ def queryWeight(url,a=0.5):
     tf = matrix_tf(queryList,querysWords)
     idf = weightVector_idf(queryList, querysWords)
     for i in range(len(tf)):
-        matrix_w.append([])
+        temp = {}
         for j in idf:
-            if tf[i].get(j) == None:
-                matrix_w[i].append((j,0))
-            else:
+            if tf[i].get(j) != None:
                 term = tf[i][j]
-                matrix_w[i].append((j,truncate(term*idf[j],2)))
+                temp[j] = truncate(term*idf[j],2)
+                matrix_w.append(temp)
     return matrix_w
 
 def similitud(vectorQuery,vectorDocument):
     numerador = 0
     normaQuery = 0
     normaDocument = 0
-    for i in range(len(vectorQuery)):
-        numerador += vectorQuery[i][1] * vectorDocument[i][1]
-        normaQuery += vectorQuery[i][1]**2
-        normaDocument += vectorDocument[i][1]**2
-    return numerador/math.sqrt(normaQuery) * math.sqrt(normaDocument)
+    for item in vectorQuery:
+        if vectorDocument.get(item) != None:
+            numerador += vectorQuery[item] * vectorDocument[item]
+        normaQuery += vectorQuery[item]**2
+    for item in vectorDocument:
+        normaDocument += vectorDocument[item]**2
+    return numerador/(math.sqrt(normaQuery) * math.sqrt(normaDocument))
 
 def main():
     urlQuery = 'collections/cran.qry'
@@ -155,8 +155,8 @@ def main():
     dw = documentWeight(urlDocument)
     qw = queryWeight(urlQuery)
     
-    #r = similitud(dw[0],qw[0])
-    #print(r)
+    r = similitud(qw[0],dw[0])
+    print(r)
 
 if __name__ == '__main__':
     main()
