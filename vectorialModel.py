@@ -65,7 +65,7 @@ def readDocument(url):
             #    break
     if documentWordList != None:
         documentList.append((len(documentList) + 1,documentWordList))
-        documentsWords = sumDict(documentsWords,documentWordList)
+        documentsWords = sumDictTerms(documentsWords,documentWordList)
     return documentsWords , documentList
 
 def weightVector_tf(document):
@@ -95,46 +95,41 @@ def weightVector_idf(documentList,documentsWords):
     return weightVector
 
 def documentWeight(url):
-    matrix_w = []
     documentsWords ,documentList = readDocument(url)
     tf = matrix_tf(documentList,documentsWords)
     idf = weightVector_idf(documentList, documentsWords)
+    return makeMatrix(tf,idf,lambda x , y : x * y)
+
+def makeMatrix(tf,idf,lambdaFunc):
+    matrix_w = []
     for i in range(len(tf)):
         temp = {}
         for j in idf:
             if tf[i].get(j) != None:
                 term = tf[i][j]
-                temp[j] = truncate(term*idf[j],2)
-                matrix_w.append(temp)
+                temp[j] = truncate(lambdaFunc(term,idf[j]),2)
+        matrix_w.append(temp)
     return matrix_w
 
-def printMatrix(matrix):
-    for i in matrix:
-        for j in i:
-            print("\t",j[0],end=" ")
-        break
-    print()
-    c = 1
-    for item in matrix:
-        print('d' + str(c),end="")
-        for element in item:
-            print("\t",element[1],end=" ")
-        print()
-        c += 1
+# def printMatrix():
+    # for i in matrix:
+    #     for j in i:
+    #         print("\t",j[0],end=" ")
+    #     break
+    # print()
+    # c = 1
+    # for item in matrix:
+    #     print('d' + str(c),end="")
+    #     for element in item:
+    #         print("\t",element[1],end=" ")
+    #     print()
+    #     c += 1
 
-def queryWeight(url,a=0.5):
-    matrix_w = []
+def queryWeight(url,a=0.4):
     querysWords ,queryList = readDocument(url)
     tf = matrix_tf(queryList,querysWords)
     idf = weightVector_idf(queryList, querysWords)
-    for i in range(len(tf)):
-        temp = {}
-        for j in idf:
-            if tf[i].get(j) != None:
-                term = tf[i][j]
-                temp[j] = truncate(term*idf[j],2)
-                matrix_w.append(temp)
-    return matrix_w
+    return makeMatrix(tf,idf, lambda x , y : y*((a + (1-a)*x)))
 
 def similitud(vectorQuery,vectorDocument):
     numerador = 0
@@ -148,15 +143,35 @@ def similitud(vectorQuery,vectorDocument):
         normaDocument += vectorDocument[item]**2
     return numerador/(math.sqrt(normaQuery) * math.sqrt(normaDocument))
 
+def rank(queryWeight,documentWeight):
+    resultRank = []
+    cquery = 0
+    for item in queryWeight:
+        cquery += 1
+        cdocument = 0
+        temp = []
+        for element in documentWeight:
+            cdocument += 1
+            sim = truncate(similitud(item,element),2)
+            temp.append((cquery,cdocument,sim))
+        temp.sort(key=lambda x:x[2],reverse=True)
+        resultRank.append(temp)
+    return resultRank
+
+def printRank(rankList):
+    for item in rankList:
+        for element in item:
+            print(str(element[0]) + ' ' + str(element[1]) + ' ' + str(element[2]))
+
 def main():
-    urlQuery = 'collections/cran.qry'
-    urlDocument = 'collections/cran.txt'
+    urlQuery = 'collections/testquery.txt'
+    urlDocument = 'collections/testCollection.txt'
 
     dw = documentWeight(urlDocument)
     qw = queryWeight(urlQuery)
     
-    r = similitud(qw[0],dw[0])
-    print(r)
+    r = rank(qw,dw)
+    printRank(r)
 
 if __name__ == '__main__':
     main()
