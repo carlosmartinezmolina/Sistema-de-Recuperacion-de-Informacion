@@ -150,11 +150,14 @@ def rank(queryWeight,documentWeight):
         cquery += 1
         cdocument = 0
         temp = []
-        for element in documentWeight:
-            cdocument += 1
-            sim = truncate(similitud(item,element),2)
-            temp.append((cquery,cdocument,sim))
-        temp.sort(key=lambda x:x[2],reverse=True)
+        if len(item) > 0:
+            for element in documentWeight:
+                cdocument += 1
+                if len(element) == 0:
+                    break
+                sim = truncate(similitud(item,element),2)
+                temp.append((cquery,cdocument,sim))
+            temp.sort(key=lambda x:x[2],reverse=True)
         resultRank.append(temp)
     return resultRank
 
@@ -164,8 +167,8 @@ def printRank(rankList):
             print(str(element[0]) + ' ' + str(element[1]) + ' ' + str(element[2]))
 
 def main():
-    urlQuery = 'collections/testquery.txt'
-    urlDocument = 'collections/testCollection.txt'
+    urlQuery = 'collections/cran.qry'
+    urlDocument = 'collections/cran.txt'
 
     dw = documentWeight(urlDocument)
     qw = queryWeight(urlQuery)
