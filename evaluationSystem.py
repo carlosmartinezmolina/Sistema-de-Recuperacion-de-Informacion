@@ -1,17 +1,21 @@
 from utils import turnLineToWords
 
-def Recuperados(rank):
+def RR_RI_NR(url,recuperados):
+    recuperadosList = recuperadosColeccion(url)
     recuperadosRelevantes = 0
     recuperadosIrrelevantes = 0
-    for item in rank:
+    for item in recuperados:
         for element in item:
-            if element[2] < 5:
+            temp = (element[0],element[1])
+            try:
+                recuperadosList.remove(temp)
                 recuperadosRelevantes += 1
-            else:
+            except:
                 recuperadosIrrelevantes += 1
-    return recuperadosRelevantes,recuperadosIrrelevantes
+    noRecuperadosRelevantes = len(recuperadosList)
+    return recuperadosRelevantes,recuperadosIrrelevantes, noRecuperadosRelevantes
 
-def NoRecuperados(url,recuperados,norecuperados):
+def recuperadosColeccion(url):
     doc = open(url,"r")
     lines = doc.readlines()
     doc.close()
@@ -20,17 +24,8 @@ def NoRecuperados(url,recuperados,norecuperados):
         temp = turnLineToWords(item)
         temp = list(temp.items())
         recuperadosList.append((int(temp[0][0]),int(temp[1][0])))
-    lenTemp = len(recuperadosList)
-    for item in recuperados:
-        for element in item:
-            temp = (element[0],element[1])
-            try:
-                recuperadosList.remove(temp)
-            except:
-                pass
-    noRecuperadosRelevantes = len(recuperadosList)
-    noRecuperadosIrrelevantes = norecuperados - lenTemp
-    return noRecuperadosRelevantes, noRecuperadosIrrelevantes
+    return recuperadosList
+
         
 def Precision(RR,RI):
     return RR/(RR+RI)

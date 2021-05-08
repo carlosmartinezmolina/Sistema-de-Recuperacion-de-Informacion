@@ -1,10 +1,22 @@
 
+def relevanceFunc(value):
+    if value > 0.5:
+        value = 1
+    elif value > 0.3 and value <= 0.5:
+        value = 2
+    elif value > 0.2 and value < 0.3:
+        value = 3
+    elif value >= 0.125 and value <= 0.2:
+        value = 4
+    else:
+        value = 5
+    return value
 
 def turnLineToWords(line):
     wordList = {}
     word = ''
     for item in line:
-        if (item == ' ' or item == '\n') and len(word) > 0:
+        if (item == ' ' or item == '\n' or item == '\t') and len(word) > 0:
             if wordList.get(word) == None:
                 wordList[word] = 1
             else:

@@ -1,6 +1,6 @@
 import math
-from utils import readDocument, printRank
-from evaluationSystem import Recuperados, NoRecuperados, Precision, Recobrado, Medida_F
+from utils import readDocument, printRank, relevanceFunc
+from evaluationSystem import RR_RI_NR, Precision, Recobrado, Medida_F
 
 def weightVector_tf(document):
     weightVector = {}
@@ -69,19 +69,6 @@ def similitud(vectorQuery,vectorDocument):
         return 0
     return numerador/(math.sqrt(normaQuery) * math.sqrt(normaDocument))
 
-def relevanceFunc(value):
-    if value > 0.5:
-        value = 1
-    elif value > 0.2 and value < 0.5:
-        value = 2
-    elif value > 0.1 and value < 0.2:
-        value = 3
-    elif value > 0.05 and value < 0.1:
-        value = 4
-    else:
-        value = 5
-    return value
-    
 def rank(queryWeight,documentWeight):
     resultRank = []
     cquery = 0
@@ -93,15 +80,25 @@ def rank(queryWeight,documentWeight):
                 if len(element[1]) == 0:
                     break
                 sim = relevanceFunc(similitud(item,element[1]))
-                temp.append((cquery,element[0],sim))
+                #print(sim)
+                if sim < 5:
+                    temp.append((cquery,element[0],sim))
             temp.sort(key=lambda x:x[2])
         resultRank.append(temp)
     return resultRank
 
 def main():
-    urlQuery = 'collections/testquery.txt'
-    urlDocument = 'collections/testCollection.txt'
-    urlAnswers = 'collections/cranqrel.txt'
+    # urlQuery = 'collections/testquery.txt'
+    # urlDocument = 'collections/testCollection.txt'
+    # urlAnswers = 'collections/cranqrel.txt'
+
+    urlQuery = 'collections/CISI.QRY'
+    urlDocument = 'collections/CISI.ALL'
+    urlAnswers = 'collections/CISI.REL'
+
+    # urlQuery = 'collections/cran.qry'
+    # urlDocument = 'collections/cran.txt'
+    # urlAnswers = 'collections/cranqrel'
 
     dw = documentWeight(urlDocument)
     qw = queryWeight(urlQuery)
@@ -109,8 +106,11 @@ def main():
     r = rank(qw,dw)
     
     printRank(r)
-    RR,RI = Recuperados(r)
-    NR,NI = NoRecuperados(urlAnswers,r,len(dw))
+    print('Calculando metricas de evaluacion...')
+    RR, RI, NR = RR_RI_NR(urlAnswers,r)
+    # print(RR)
+    # print(RI)
+    # print(NR)
 
     precision = Precision(RR,RI)
     recobrado = Recobrado(RR,NR)
