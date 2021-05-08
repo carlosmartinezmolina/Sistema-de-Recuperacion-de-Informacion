@@ -1,78 +1,6 @@
 import math
-
-def truncate(number,n):
-    return float(int(number * (10**n)) / (10**n))
-
-def turnLineToWords(line):
-    wordList = {}
-    word = ''
-    for item in line:
-        if (item == ' ' or item == '\n') and len(word) > 0:
-            if wordList.get(word) == None:
-                wordList[word] = 1
-            else:
-                wordList[word] += 1
-            word = ''
-        elif item != ' ':
-            word += item
-    if len(word) > 0:
-        if wordList.get(word) == None:
-            wordList[word] = 1
-        else:
-            wordList[word] += 1
-    return wordList
-
-def sumDict(d1,d2):
-    for k in d2:
-        if d1.get(k) == None:
-            d1[k] = d2[k]
-        else:
-            d1[k] += d2[k]
-    return d1
-
-def sumDictTerms(d1,d2):
-    for k in d2:
-        if d1.get(k) == None:
-            d1[k] = 1
-        else:
-            d1[k] += 1
-    return d1
-
-def documentId(d):
-    if len(d) == 2 and d.get('.I') != None:
-        return False
-    if len(d) == 1 and (d.get('.T') != None or d.get('.A') != None or d.get('.B') != None or d.get('.W') != None):
-        return False
-    return True
-
-def readDocument(url):
-    doc = open(url,"r")
-    lines = doc.readlines()
-    doc.close()
-    documentWordList = {}
-    documentsWords = {}
-    documentList = []
-    first = -1
-    numberDocument = 0
-    for item in lines:
-        temp = turnLineToWords(item)
-        if documentId(temp):
-            documentWordList = sumDict(documentWordList,temp)
-        elif temp.get('.I') != None:
-            numberDocument = int(list(temp)[1])
-            if first == -1:
-                first = numberDocument
-            if numberDocument != first:
-                documentList.append((numberDocument - 1,documentWordList))
-                documentsWords = sumDictTerms(documentsWords,documentWordList)
-                documentWordList = {}
-                #Estas lineas comentadas limitan la cantidad de documentos analizados
-                #if int(list(temp)[1]) > 2:
-                #    break
-    if documentWordList != None:
-        documentList.append((numberDocument,documentWordList))
-        documentsWords = sumDictTerms(documentsWords,documentWordList)
-    return documentsWords , documentList
+from utils import readDocument, printRank
+from evaluationSystem import Recuperados, NoRecuperados, Precision, Recobrado, Medida_F
 
 def weightVector_tf(document):
     weightVector = {}
@@ -105,9 +33,9 @@ def documentWeight(url):
     documentsWords ,documentList = readDocument(url)
     tf = matrix_tf(documentList,documentsWords)
     idf = weightVector_idf(documentList, documentsWords)
-    return makeMatrix(tf,idf,lambda x , y : x * y)
+    return makeMatrix(tf,idf,lambda x , y : x * y,documentList)
 
-def makeMatrix(tf,idf,lambdaFunc):
+def makeMatrix(tf,idf,lambdaFunc,documentList=[]):
     matrix_w = []
     for i in range(len(tf)):
         temp = {}
@@ -115,28 +43,16 @@ def makeMatrix(tf,idf,lambdaFunc):
             if tf[i].get(j) != None:
                 term = tf[i][j]
                 temp[j] = lambdaFunc(term,idf[j])
-        matrix_w.append(temp)
+        if len(documentList) > 0:
+            matrix_w.append((documentList[i][0],temp))
+        else:
+            matrix_w.append(temp)
     return matrix_w
-
-# def printMatrix():
-    # for i in matrix:
-    #     for j in i:
-    #         print("\t",j[0],end=" ")
-    #     break
-    # print()
-    # c = 1
-    # for item in matrix:
-    #     print('d' + str(c),end="")
-    #     for element in item:
-    #         print("\t",element[1],end=" ")
-    #     print()
-    #     c += 1
 
 def queryWeight(url,a=0.5):
     querysWords ,queryList = readDocument(url)
     tf = matrix_tf(queryList,querysWords)
     idf = weightVector_idf(queryList, querysWords)
-    #print(idf)
     return makeMatrix(tf,idf, lambda x , y : y*((a + (1-a)*x)))
 
 def similitud(vectorQuery,vectorDocument):
@@ -171,35 +87,39 @@ def rank(queryWeight,documentWeight):
     cquery = 0
     for item in queryWeight:
         cquery += 1
-        cdocument = 0
         temp = []
         if len(item) > 0:
             for element in documentWeight:
-                cdocument += 1
-                if len(element) == 0:
+                if len(element[1]) == 0:
                     break
-                sim = relevanceFunc(similitud(item,element))
-                if sim < 5:
-                    temp.append((cquery,cdocument,sim))
+                sim = relevanceFunc(similitud(item,element[1]))
+                temp.append((cquery,element[0],sim))
             temp.sort(key=lambda x:x[2])
         resultRank.append(temp)
     return resultRank
 
-def printRank(rankList):
-    for item in rankList:
-        for element in item:
-            print(str(element[0]) + ' ' + str(element[1]) + ' ' + str(element[2]))
-
 def main():
-    urlQuery = 'collections/cran.qry'
-    urlDocument = 'collections/cran.txt'
+    urlQuery = 'collections/testquery.txt'
+    urlDocument = 'collections/testCollection.txt'
+    urlAnswers = 'collections/cranqrel.txt'
 
     dw = documentWeight(urlDocument)
     qw = queryWeight(urlQuery)
-    #print(dw)
-    #print(qw)
+    
     r = rank(qw,dw)
+    
     printRank(r)
+    RR,RI = Recuperados(r)
+    NR,NI = NoRecuperados(urlAnswers,r,len(dw))
+
+    precision = Precision(RR,RI)
+    recobrado = Recobrado(RR,NR)
+
+    print('Precision: ' + str(precision))
+    print('Recobrado: ' + str(recobrado))
+
+    mf = Medida_F(precision,recobrado)
+    print('Medida_F(beta=1): ' + str(mf))
 
 if __name__ == '__main__':
     main()
