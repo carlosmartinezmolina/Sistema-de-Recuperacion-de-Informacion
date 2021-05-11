@@ -88,17 +88,14 @@ def rank(queryWeight,documentWeight):
     return resultRank
 
 def main():
-    # urlQuery = 'collections/testquery.txt'
-    # urlDocument = 'collections/testCollection.txt'
-    # urlAnswers = 'collections/cranqrel.txt'
 
-    urlQuery = 'collections/CISI.QRY'
-    urlDocument = 'collections/CISI.ALL'
-    urlAnswers = 'collections/CISI.REL'
+    # urlQuery = 'collections/CISI.QRY'
+    # urlDocument = 'collections/CISI.ALL'
+    # urlAnswers = 'collections/CISI.REL'
 
-    # urlQuery = 'collections/cran.qry'
-    # urlDocument = 'collections/cran.txt'
-    # urlAnswers = 'collections/cranqrel'
+    urlQuery = 'collections/cran.qry'
+    urlDocument = 'collections/cran.txt'
+    urlAnswers = 'collections/cranqrel'
 
     dw = documentWeight(urlDocument)
     qw = queryWeight(urlQuery)
@@ -108,9 +105,6 @@ def main():
     printRank(r)
     print('Calculando metricas de evaluacion...')
     RR, RI, NR = RR_RI_NR(urlAnswers,r)
-    # print(RR)
-    # print(RI)
-    # print(NR)
 
     precision = Precision(RR,RI)
     recobrado = Recobrado(RR,NR)

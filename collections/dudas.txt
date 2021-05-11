@@ -1,5 +1,0 @@
--en el idf de las query, el N es la cant de documentos o de querys?o sea esos valores son respecto a los
-documentos o las querys?
--a mi los valores de similitud me dan muy bajos como hago la relevancia?
-
-falta:
