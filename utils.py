@@ -31,20 +31,6 @@ def turnLineToWords(line):
             wordList[word] += 1
     return wordList
 
-# def printMatrix():
-    # for i in matrix:
-    #     for j in i:
-    #         print("\t",j[0],end=" ")
-    #     break
-    # print()
-    # c = 1
-    # for item in matrix:
-    #     print('d' + str(c),end="")
-    #     for element in item:
-    #         print("\t",element[1],end=" ")
-    #     print()
-    #     c += 1
-
 def truncate(number,n):
     return float(int(number * (10**n)) / (10**n))
 

@@ -12,7 +12,6 @@ def weightVector_tf(document):
         weightVector[item] = document[item]
     for item in weightVector:
         weightVector[item] = weightVector[item]/max_freq
-    #print(weightVector)
     return weightVector
 
 def matrix_tf(documentList,documentsWords):
@@ -80,7 +79,6 @@ def rank(queryWeight,documentWeight):
                 if len(element[1]) == 0:
                     break
                 sim = relevanceFunc(similitud(item,element[1]))
-                #print(sim)
                 if sim < 5:
                     temp.append((cquery,element[0],sim))
             temp.sort(key=lambda x:x[2])
